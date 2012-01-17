@@ -9,15 +9,18 @@
 
 class Resonator {
 public:
-	Resonator(int del_time, float decay_coef);
+	Resonator(float freq, float Q);
 	Resonator();
-	void set_params(int del_time, float decay_coef);
+	void set_params(float freq, float Q);
+	void set_sr(int SR);
+	void set_q(float Q);
 	float process(float input_sample);
-	
+	float Q, cf;
 private:
-	float * delay_line;
+	float sr;
 	float a0, a1, a2, b0, b1, b2;
-	int delay_time;
-	float decay_time;
-	int read_ptr, write_ptr;
+	float w0;
+	float cosW0, sinW0;
+	float alpha;
+	float x0, x1, x2, y1, y2;
 };
