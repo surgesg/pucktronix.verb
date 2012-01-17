@@ -16,6 +16,7 @@ public:
 	
 private:
 	float * delay_line;
+	float a0, a1, a2, b0, b1, b2;
 	int delay_time;
 	float decay_time;
 	int read_ptr, write_ptr;

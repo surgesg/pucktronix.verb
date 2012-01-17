@@ -20,20 +20,20 @@ AudioEffect* createEffectInstance (audioMasterCallback audioMaster)
 
 //-------------------------------------------------------------------------------------------------------
 Springverb::Springverb (audioMasterCallback audioMaster)
-: AudioEffectX (audioMaster, 1, 1)	// 1 program, 1 parameter only
+: AudioEffectX (audioMaster, 1, kNumParams)	// 1 program, 1 parameter only
 {
 	setNumInputs (2);		// stereo in
 	setNumOutputs (2);		// stereo out
-	setUniqueID ('Gain');	// identify
+	setUniqueID ('pkvr');	// identify
 	canProcessReplacing ();	// supports replacing output
 	canDoubleReplacing ();	// supports double precision processing
 
-	fGain = 1.f;			// default to 0 dB
 	vst_strncpy (programName, "Default", kVstMaxProgNameLen);	// default program name
-	num_resonators = 500;
+	max_resonators = num_resonators = 500;
+	decay_time = -0.95;
 	resonators = new Resonator[num_resonators];
-	for(int i = 0; i < num_resonators; i++){
-		resonators[i].set_params(4 + i, -0.95);	
+	for(int i = 0; i < max_resonators; i++){
+		resonators[i].set_params(4 + i, decay_time);	
 	}
 }
 
@@ -58,51 +58,87 @@ void Springverb::getProgramName (char* name)
 //-----------------------------------------------------------------------------------------
 void Springverb::setParameter (VstInt32 index, float value)
 {
-	fGain = value;
+	switch(index){
+		case kNumResonators:
+			num_resonators = value * max_resonators;
+			break;
+		case kDecayTime:
+			decay_time = 2.f * (value - 0.5);
+			for(int i = 0; i < max_resonators; i++){
+				resonators[i].set_params(4 + i, decay_time);	
+			}
+			break;
+	}
 }
 
 //-----------------------------------------------------------------------------------------
 float Springverb::getParameter (VstInt32 index)
 {
-	return fGain;
+	switch(index){
+		case kNumResonators:
+			return (float)num_resonators / (float)max_resonators;
+		case kDecayTime:
+			return (decay_time * 0.5) + 0.5;
+	}
 }
 
 //-----------------------------------------------------------------------------------------
 void Springverb::getParameterName (VstInt32 index, char* label)
 {
-	vst_strncpy (label, "Gain", kVstMaxParamStrLen);
+	switch (index) {
+		case kNumResonators:
+			vst_strncpy (label, "Resonators", kVstMaxParamStrLen);
+			break;
+		case kDecayTime:
+			vst_strncpy (label, "Decay time", kVstMaxParamStrLen);			
+			break;
+	}
 }
 
 //-----------------------------------------------------------------------------------------
 void Springverb::getParameterDisplay (VstInt32 index, char* text)
 {
-	dB2string (fGain, text, kVstMaxParamStrLen);
+	switch(index){
+		case kNumResonators:	
+			int2string(num_resonators, text, kVstMaxParamStrLen);
+			break;
+		case kDecayTime:
+			float2string(decay_time, text, kVstMaxParamStrLen);
+			break;
+	}
 }
 
 //-----------------------------------------------------------------------------------------
 void Springverb::getParameterLabel (VstInt32 index, char* label)
 {
-	vst_strncpy (label, "dB", kVstMaxParamStrLen);
+	switch(index){
+		case kNumResonators:
+			vst_strncpy (label, "#", kVstMaxParamStrLen);
+			break;
+		case kDecayTime:
+			vst_strncpy (label, "%", kVstMaxParamStrLen);
+			break;
+	}
 }
 
 //------------------------------------------------------------------------
 bool Springverb::getEffectName (char* name)
 {
-	vst_strncpy (name, "Gain", kVstMaxEffectNameLen);
+	vst_strncpy (name, "pucktronix.reverb", kVstMaxEffectNameLen);
 	return true;
 }
 
 //------------------------------------------------------------------------
 bool Springverb::getProductString (char* text)
 {
-	vst_strncpy (text, "Gain", kVstMaxProductStrLen);
+	vst_strncpy (text, "pucktronix.reverb", kVstMaxProductStrLen);
 	return true;
 }
 
 //------------------------------------------------------------------------
 bool Springverb::getVendorString (char* text)
 {
-	vst_strncpy (text, "Steinberg Media Technologies", kVstMaxVendorStrLen);
+	vst_strncpy (text, "pucktronix", kVstMaxVendorStrLen);
 	return true;
 }
 
@@ -136,15 +172,5 @@ void Springverb::processReplacing (float** inputs, float** outputs, VstInt32 sam
 //-----------------------------------------------------------------------------------------
 void Springverb::processDoubleReplacing (double** inputs, double** outputs, VstInt32 sampleFrames)
 {
-    double* in1  =  inputs[0];
-    double* in2  =  inputs[1];
-    double* out1 = outputs[0];
-    double* out2 = outputs[1];
-	double dGain = fGain;
 
-    while (--sampleFrames >= 0)
-    {
-        (*out1++) = (*in1++) * dGain;
-        (*out2++) = (*in2++) * dGain;
-    }
 }

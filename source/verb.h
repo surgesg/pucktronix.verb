@@ -17,6 +17,12 @@
 #include "resonator.h"
 
 //-------------------------------------------------------------------------------------------------------
+enum {
+	kNumResonators = 0,
+	kDecayTime,
+	kNumParams
+};
+
 class Springverb : public AudioEffectX
 {
 public:
@@ -42,9 +48,10 @@ public:
 	virtual bool getVendorString (char* text);
 	virtual bool getProductString (char* text);
 	virtual VstInt32 getVendorVersion ();
-	int num_resonators;
+	
 protected:
-	float fGain;
+	int num_resonators, max_resonators;
+	float decay_time;
 	char programName[kVstMaxProgNameLen + 1];
 	Resonator * resonators;
 };
