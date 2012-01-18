@@ -33,7 +33,7 @@ Springverb::Springverb (audioMasterCallback audioMaster)
 	resonators = new Resonator[num_resonators];
 	for(int i = 0; i < max_resonators; i++){
 		resonators[i].set_sr(getSampleRate());
-		resonators[i].set_params(100 * i + 20, 1.f);	
+		resonators[i].set_params(50 * i + 20, 1.f);	
 	}
 }
 
@@ -69,6 +69,12 @@ void Springverb::setParameter (VstInt32 index, float value)
 				resonators[i].set_q(value * 1000.f);	
 			}
 			break;
+		case kSpread:
+			spread = value * 100.f;
+			for(int i = 0; i < max_resonators; i++){
+				resonators[i].set_params(i * spread + 20, decay_time);
+			}
+			break;
 	}
 }
 
@@ -80,6 +86,9 @@ float Springverb::getParameter (VstInt32 index)
 			return (float)num_resonators / (float)max_resonators;
 		case kDecayTime:
 			return decay_time / 1000.f;
+		case kSpread:
+			return spread / 100.f;
+			break;
 	}
 }
 
@@ -92,6 +101,9 @@ void Springverb::getParameterName (VstInt32 index, char* label)
 			break;
 		case kDecayTime:
 			vst_strncpy (label, "Decay time", kVstMaxParamStrLen);			
+			break;
+		case kSpread:
+			vst_strncpy(label, "Spread", kVstMaxParamStrLen);
 			break;
 	}
 }
@@ -106,6 +118,9 @@ void Springverb::getParameterDisplay (VstInt32 index, char* text)
 		case kDecayTime:
 			float2string(decay_time, text, kVstMaxParamStrLen);
 			break;
+		case kSpread:
+			float2string(spread, text, kVstMaxParamStrLen);
+			break;
 	}
 }
 
@@ -118,6 +133,9 @@ void Springverb::getParameterLabel (VstInt32 index, char* label)
 			break;
 		case kDecayTime:
 			vst_strncpy (label, "%", kVstMaxParamStrLen);
+			break;
+		case kSpread:
+			vst_strncpy(label, "#", kVstMaxParamStrLen);
 			break;
 	}
 }

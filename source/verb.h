@@ -19,6 +19,7 @@
 //-------------------------------------------------------------------------------------------------------
 enum {
 	kNumResonators = 0,
+	kSpread,
 	kDecayTime,
 	kNumParams
 };
@@ -52,6 +53,7 @@ public:
 protected:
 	int num_resonators, max_resonators;
 	float decay_time;
+	float spread;
 	char programName[kVstMaxProgNameLen + 1];
 	Resonator * resonators;
 };
