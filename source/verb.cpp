@@ -29,11 +29,11 @@ Springverb::Springverb (audioMasterCallback audioMaster)
 	canDoubleReplacing ();	// supports double precision processing
 
 	vst_strncpy (programName, "Default", kVstMaxProgNameLen);	// default program name
-	max_resonators = num_resonators = 500;
-	decay_time = -0.95;
+	max_resonators = num_resonators = 200;
 	resonators = new Resonator[num_resonators];
 	for(int i = 0; i < max_resonators; i++){
-		resonators[i].set_params(4 + i, decay_time);	
+		resonators[i].set_sr(getSampleRate());
+		resonators[i].set_params(100 * i + 20, 1.f);	
 	}
 }
 
@@ -58,14 +58,15 @@ void Springverb::getProgramName (char* name)
 //-----------------------------------------------------------------------------------------
 void Springverb::setParameter (VstInt32 index, float value)
 {
+	
 	switch(index){
 		case kNumResonators:
 			num_resonators = value * max_resonators;
 			break;
 		case kDecayTime:
-			decay_time = 2.f * (value - 0.5);
+			decay_time = 1000 * value;
 			for(int i = 0; i < max_resonators; i++){
-				resonators[i].set_params(4 + i, decay_time);	
+				resonators[i].set_q(value * 1000.f);	
 			}
 			break;
 	}
@@ -78,7 +79,7 @@ float Springverb::getParameter (VstInt32 index)
 		case kNumResonators:
 			return (float)num_resonators / (float)max_resonators;
 		case kDecayTime:
-			return (decay_time * 0.5) + 0.5;
+			return decay_time / 1000.f;
 	}
 }
 
