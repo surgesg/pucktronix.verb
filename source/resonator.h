@@ -11,7 +11,7 @@ class Resonator {
 public:
 	Resonator(float freq, float Q);
 	Resonator();
-	void set_params(float freq, float Q);
+	void set_params(float freq, float decay);
 	void set_sr(int SR);
 	void set_q(float Q);
 	float process(float input_sample);
@@ -24,4 +24,6 @@ private:
 	float alpha;
 	float x0, x1, x2, y1, y2;
 	float c;
+	float output_sample;
+	float decay;
 };

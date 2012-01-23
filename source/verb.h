@@ -20,7 +20,9 @@
 enum {
 	kNumResonators = 0,
 	kSpread,
+	kRandomToggle,
 	kDecayTime,
+	kBlend,
 	kNumParams
 };
 
@@ -52,7 +54,9 @@ public:
 	
 protected:
 	int num_resonators, max_resonators;
+	bool random;
 	float decay_time;
+	float blend_amount;
 	float spread;
 	char programName[kVstMaxProgNameLen + 1];
 	Resonator * resonators;

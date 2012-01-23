@@ -11,8 +11,14 @@
 #include "public.sdk/source/vst2.x/audioeffectx.h"
 #include <math.h>
 
-/* implements a biquad BPF from RBJ's audio EQ cookbook
+/* implements a biquad resonant LPF from RBJ's audio EQ cookbook
    http://www.musicdsp.org/files/Audio-EQ-Cookbook.txt
+ 
+ decay time sketchpad
+ Q = number of oscillations required for energy to fall to 1 / e^(2 * pi)
+
+ decay_time = Q * (1 / fc)
+ Q = decay_time / (1 / fc)
  */
 
 Resonator::Resonator(float freq, float _Q){
@@ -24,20 +30,23 @@ Resonator::Resonator(float freq, float _Q){
 Resonator::Resonator(){
 	a0 = a1 = a2 = b0 = b1 = b2 = 0;
 	y1 = y2 = x0 = x1 = x2 = 0; 
+
 }
 
 void Resonator::set_sr(int SR){
 	sr = SR;
 }
 
-void Resonator::set_params(float freq, float _Q){
+void Resonator::set_params(float freq, float _decay){
 	cf = freq;
-	Q = _Q;
+	decay = _decay;
+	Q = (float)decay / (1.0 / cf); // works?
 	
 	/* compute some constants */
-	w0 = (float)(2 * 3.14159 * cf) / sr;
+	w0 = (2.f * 3.14159 * cf) / sr;
+	alpha = sinW0/(2.f*Q); // case: Q - maybe this will need some experimentation
 	cosW0 = cos(w0);
-	alpha = sin(w0)/(2.f*Q); // case: Q - maybe this will need some experimentation
+	sinW0 = sin(w0);
 	
 	/* compute coefficients */
 	// using constant 0 dB peak gain form
@@ -56,7 +65,7 @@ void Resonator::set_q(float _q){
 
 float Resonator::process(float input_sample){
 	/* get output sample */
-	float output_sample = 0;
+	output_sample = 0;
 	x0 = input_sample;
 	output_sample = (b0 / a0) * x0 + (b1 / a0)*x1 + (b2 / a0)*x2
 								 - (a1/a0)*y1 - (a2/a0)*y2;

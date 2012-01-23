@@ -11,6 +11,7 @@
 //-------------------------------------------------------------------------------------------------------
 
 #include "verb.h"
+#include <stdlib.h>
 
 //-------------------------------------------------------------------------------------------------------
 AudioEffect* createEffectInstance (audioMasterCallback audioMaster)
@@ -29,11 +30,14 @@ Springverb::Springverb (audioMasterCallback audioMaster)
 	canDoubleReplacing ();	// supports double precision processing
 
 	vst_strncpy (programName, "Default", kVstMaxProgNameLen);	// default program name
+	random = false;
+	spread = 50;
 	max_resonators = num_resonators = 200;
 	resonators = new Resonator[num_resonators];
 	for(int i = 0; i < max_resonators; i++){
 		resonators[i].set_sr(getSampleRate());
 		resonators[i].set_params(50 * i + 20, 1.f);	
+		resonators[i].set_q(1.f);
 	}
 }
 
@@ -64,16 +68,34 @@ void Springverb::setParameter (VstInt32 index, float value)
 			num_resonators = value * max_resonators;
 			break;
 		case kDecayTime:
-			decay_time = 1000 * value;
+			decay_time = 10 * value;
 			for(int i = 0; i < max_resonators; i++){
-				resonators[i].set_q(value * 1000.f);	
+				resonators[i].set_q(value * 10.f);	
 			}
 			break;
 		case kSpread:
 			spread = value * 100.f;
 			for(int i = 0; i < max_resonators; i++){
 				resonators[i].set_params(i * spread + 20, decay_time);
+				resonators[i].set_q(decay_time);
 			}
+			break;
+		case kRandomToggle:
+			random = (bool)(int)(value + 0.5);
+			if(random){
+				for(int i = 0; i < max_resonators; i++){
+					resonators[i].set_params((rand() % 5000) + 20, decay_time);
+					resonators[i].set_q(decay_time);	
+				}
+			} else {
+				for(int i = 0; i < max_resonators; i++){
+					resonators[i].set_params(i * spread + 20, decay_time);
+					resonators[i].set_q(decay_time);	
+				}				
+			}
+			break;
+		case kBlend:
+			blend_amount = value;
 			break;
 	}
 }
@@ -85,9 +107,15 @@ float Springverb::getParameter (VstInt32 index)
 		case kNumResonators:
 			return (float)num_resonators / (float)max_resonators;
 		case kDecayTime:
-			return decay_time / 1000.f;
+			return decay_time / 10.f;
 		case kSpread:
 			return spread / 100.f;
+			break;
+		case kRandomToggle:
+			return (int)random;
+			break;
+		case kBlend:
+			return blend_amount;
 			break;
 	}
 }
@@ -105,6 +133,12 @@ void Springverb::getParameterName (VstInt32 index, char* label)
 		case kSpread:
 			vst_strncpy(label, "Spread", kVstMaxParamStrLen);
 			break;
+		case kRandomToggle:
+			vst_strncpy(label, "Random Toggle", kVstMaxParamStrLen);
+			break;
+		case kBlend:
+			vst_strncpy(label, "Wet/Dry", kVstMaxParamStrLen);
+			break;
 	}
 }
 
@@ -121,6 +155,12 @@ void Springverb::getParameterDisplay (VstInt32 index, char* text)
 		case kSpread:
 			float2string(spread, text, kVstMaxParamStrLen);
 			break;
+		case kRandomToggle:
+			int2string((int)random, text, kVstMaxParamStrLen);
+			break;
+		case kBlend:
+			float2string(blend_amount, text, kVstMaxParamStrLen);
+			break;
 	}
 }
 
@@ -132,10 +172,16 @@ void Springverb::getParameterLabel (VstInt32 index, char* label)
 			vst_strncpy (label, "#", kVstMaxParamStrLen);
 			break;
 		case kDecayTime:
-			vst_strncpy (label, "%", kVstMaxParamStrLen);
+			vst_strncpy (label, "s", kVstMaxParamStrLen);
 			break;
 		case kSpread:
 			vst_strncpy(label, "#", kVstMaxParamStrLen);
+			break;
+		case kRandomToggle:
+			vst_strncpy(label, "on/off", kVstMaxParamStrLen);
+			break;
+		case kBlend:
+			vst_strncpy(label, "wet/dry", kVstMaxParamStrLen);
 			break;
 	}
 }
@@ -181,7 +227,7 @@ void Springverb::processReplacing (float** inputs, float** outputs, VstInt32 sam
 		output_sample = 0;
 		input_sample = *in1++;
 		for(int i = 0; i < num_resonators; i++){
-			output_sample += resonators[i].process(input_sample);	
+			output_sample += (resonators[i].process(input_sample) * blend_amount) + (input_sample * (1.0 - blend_amount));	
 		}
         (*out1++) = output_sample * (1.f / num_resonators);
         (*out2++) = output_sample * (1.f / num_resonators); 
