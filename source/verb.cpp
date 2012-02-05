@@ -217,7 +217,6 @@ VstInt32 Springverb::getVendorVersion ()
 void Springverb::processReplacing (float** inputs, float** outputs, VstInt32 sampleFrames)
 {
     float* in1  =  inputs[0];
-    float* in2  =  inputs[1];
     float* out1 = outputs[0];
     float* out2 = outputs[1];
 	float output_sample = 0;

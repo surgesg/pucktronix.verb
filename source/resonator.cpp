@@ -44,9 +44,9 @@ void Resonator::set_params(float freq, float _decay){
 	
 	/* compute some constants */
 	w0 = (2.f * 3.14159 * cf) / sr;
-	alpha = sinW0/(2.f*Q); // case: Q - maybe this will need some experimentation
 	cosW0 = cos(w0);
 	sinW0 = sin(w0);
+	alpha = sinW0/(2.f*Q); // case: Q - maybe this will need some experimentation
 	
 	/* compute coefficients */
 	// using constant 0 dB peak gain form
