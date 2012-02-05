@@ -46,7 +46,7 @@ void Resonator::set_params(float freq, float _decay){
 	w0 = (2.f * 3.14159 * cf) / sr;
 	cosW0 = cos(w0);
 	sinW0 = sin(w0);
-	alpha = sinW0/(2.f*Q); // case: Q - maybe this will need some experimentation
+	alpha = sinW0/(2.f*Q); 
 	
 	/* compute coefficients */
 	// using constant 0 dB peak gain form
@@ -68,7 +68,7 @@ float Resonator::process(float input_sample){
 	output_sample = 0;
 	x0 = input_sample;
 	output_sample = (b0 / a0) * x0 + (b1 / a0)*x1 + (b2 / a0)*x2
-								 - (a1/a0)*y1 - (a2/a0)*y2;
+					- (a1/a0)*y1 - (a2/a0)*y2;
 	x2 = x1;
 	x1 = x0;
 	y2 = y1;
